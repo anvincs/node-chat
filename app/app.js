@@ -1,4 +1,4 @@
-const socket = new WebSocket("ws://localhost:3000");
+const socket = io("ws://localhost:3000");
 
 function sendMessage(e) {
   e.preventDefault();
@@ -6,7 +6,7 @@ function sendMessage(e) {
   const input = document.querySelector("input");
 
   if (input.value) {
-    socket.send(input.value);
+    socket.emit("message", input.value);
     input.value = "";
   }
   input.focus();
@@ -17,7 +17,7 @@ form.addEventListener("submit", sendMessage);
 
 // Listen for the messages
 
-socket.addEventListener("message", ({ data }) => {
+socket.on("message", (data) => {
   const li = document.createElement("li");
   li.textContent = data;
   document.querySelector("ul").appendChild(li);
