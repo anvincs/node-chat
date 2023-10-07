@@ -1,6 +1,6 @@
 import express from "express";
 import { Server } from "socket.io";
-import path from 'path'
+import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,9 +9,9 @@ const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3500;
 
-const app = express()
+const app = express();
 
-app.use(express.static(path.join(__dirname, "public")))
+app.use(express.static(path.join(__dirname, "public")));
 // __dirname is not available in modules.
 // It is only available in require
 
@@ -29,11 +29,34 @@ const io = new Server(expressServer, {
 });
 
 io.on("connection", (socket) => {
-  console.log(`User ${socket.id} connected`);
+  // console.log(`User ${socket.id} connected`);
 
+  // Upon connection - Only to the user who connected
+  socket.emit("message", "Welcome to Chat App");
+  // socket.emit() goes only to the connected user
+
+  // Upon connection - To all the users except the user who connected
+  socket.broadcast.emit(
+    "message",
+    `${socket.id.substring(0, 5)} joined the chat`
+  );
+  // socket.broadcast.emit() goes to all the users except the connected user
+
+  // Listening for a message event
   socket.on("message", (data) => {
-    // console.log(data);
     io.emit("message", `${socket.id.substring(0, 5)} : ${data}`);
   });
-});
 
+  // When user disconnects -  to all others
+  socket.on("disconnect", () => {
+    socket.broadcast.emit(
+      "message",
+      `${socket.id.substring(0, 5)} left the chat`
+    );
+  });
+
+  // Listen for activity
+  socket.on("activity", (name) => {
+    socket.broadcast.emit("activity", name);
+  });
+});
